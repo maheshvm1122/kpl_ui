@@ -25,7 +25,7 @@ Vite prints a Network URL such as `http://192.168.1.20:5173`. Players open `http
 ```bash
 npm run build        # output in dist/
 ```
-If the API is hosted on a different domain, set `VITE_API_URL=https://your-api-domain` before building, and add the site URL to `CLIENT_URL` in the backend `.env`.
+Production builds use the public API origin in `.env.production`. To deploy, run `npm ci && npm run build` and upload the contents of `dist/` to the web server's document root. Configure the web server to fall back to `index.html` for client-side routes, and allow the frontend origin in the backend's `CLIENT_URL` setting. If the API origin changes, update `.env.production` and rebuild.
 
 ## Pages
 
