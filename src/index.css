@@ -1,0 +1,132 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'Inter', ui-sans-serif, sans-serif;
+
+  /* Pitch green */
+  --color-pitch-50: #eef8f1;
+  --color-pitch-100: #d5eedd;
+  --color-pitch-200: #a9dcbb;
+  --color-pitch-300: #74c493;
+  --color-pitch-400: #43a66d;
+  --color-pitch-500: #238a52;
+  --color-pitch-600: #146e40;
+  --color-pitch-700: #0f5132;
+  --color-pitch-800: #0b3d26;
+  --color-pitch-900: #072819;
+
+  /* Leather-ball red */
+  --color-ball-500: #c62828;
+  --color-ball-600: #a51f1f;
+
+  /* Trophy gold */
+  --color-gold-300: #ffd76a;
+  --color-gold-400: #f8c537;
+  --color-gold-500: #e2a811;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+  body {
+    @apply bg-slate-100 text-slate-800 antialiased;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition
+    focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pitch-500 disabled:opacity-50;
+}
+
+@utility btn-primary {
+  @apply btn bg-pitch-700 text-white hover:bg-pitch-800;
+}
+
+@utility btn-secondary {
+  @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+}
+
+@utility btn-danger {
+  @apply btn bg-ball-500 text-white hover:bg-ball-600;
+}
+
+@utility btn-gold {
+  @apply btn bg-gold-400 text-pitch-900 hover:bg-gold-500;
+}
+
+@utility btn-ghost {
+  @apply btn text-slate-600 hover:bg-slate-100;
+}
+
+@utility btn-sm {
+  @apply px-2.5 py-1.5 text-xs;
+}
+
+@utility input {
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400
+    focus:border-pitch-500 focus:ring-2 focus:ring-pitch-200 focus:outline-none disabled:bg-slate-100;
+}
+
+@utility label {
+  @apply mb-1 block text-sm font-medium text-slate-700;
+}
+
+@utility field-error {
+  @apply mt-1 text-xs font-medium text-ball-500;
+}
+
+@utility card {
+  @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+}
+
+@utility table-wrap {
+  @apply overflow-x-auto rounded-xl border border-slate-200 bg-white;
+}
+
+@utility data-table {
+  @apply w-full text-left text-sm;
+}
+
+@layer components {
+  .data-table th {
+    @apply bg-slate-50 px-3 py-2.5 text-xs font-semibold tracking-wide whitespace-nowrap text-slate-500 uppercase;
+  }
+}
+
+@layer components {
+  .data-table td {
+    @apply border-t border-slate-100 px-3 py-2.5 align-middle;
+  }
+}
+
+@utility badge {
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap;
+}
+
+@keyframes sold-pop {
+  0% {
+    transform: scale(0.4) rotate(-12deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15) rotate(-6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-8deg);
+    opacity: 1;
+  }
+}
+.animate-sold {
+  animation: sold-pop 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
