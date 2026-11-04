@@ -16,6 +16,9 @@ export const TOURNAMENT = {
 };
 export const TOURNAMENT_FULL_NAME = `${TOURNAMENT.name} ${TOURNAMENT.season}`;
 
+/** Bid countdown on the auction screen, in seconds. Set VITE_AUCTION_TIMER_SECONDS in cricketwebapp/.env */
+export const AUCTION_TIMER_SECONDS = Math.max(1, parseInt(import.meta.env.VITE_AUCTION_TIMER_SECONDS, 10) || 20);
+
 export const ROLES = { ADMIN: 'Admin', AUCTIONEER: 'Auctioneer' };
 
 export const PAGE_SIZE = 20;

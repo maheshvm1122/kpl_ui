@@ -84,16 +84,24 @@ export const downloadBlob = (blob, fileName) => {
 
 const EXCEL_FORMATS = { money: '#,##0' };
 
-/**
- * Builds an .xlsx file in the browser and downloads it.
- * columns: [{ header, key, width, type: 'money' }]
- * Each header cell is styled on its own so every column title is visible.
- */
-export const exportToExcel = async ({ fileName, sheetName, columns, rows }) => {
-  const { default: ExcelJS } = await import('exceljs'); // loaded only when someone exports
-  const workbook = new ExcelJS.Workbook();
-  workbook.created = new Date();
-  const sheet = workbook.addWorksheet(sheetName, { views: [{ state: 'frozen', ySplit: 1 }] });
+/** Excel sheet names: max 31 characters, no : \\ / ? * [ ] and must be unique in the file. */
+const safeSheetName = (name, used) => {
+  const base =
+    String(name || 'Sheet')
+      .replace(/[:\\/?*[\]]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 31) || 'Sheet';
+  let candidate = base;
+  for (let i = 2; used.has(candidate.toLowerCase()); i += 1) candidate = `${base.slice(0, 31 - `(${i})`.length)}(${i})`;
+  used.add(candidate.toLowerCase());
+  return candidate;
+};
+
+function addSheet(workbook, { sheetName, columns, rows }, usedNames) {
+  const sheet = workbook.addWorksheet(safeSheetName(sheetName, usedNames), {
+    views: [{ state: 'frozen', ySplit: 1 }],
+  });
   sheet.columns = columns.map(({ key, width }) => ({ key, width: width || 16 }));
 
   const headerRow = sheet.addRow(columns.map((c) => c.header));
@@ -109,8 +117,24 @@ export const exportToExcel = async ({ fileName, sheetName, columns, rows }) => {
     columns.forEach((c, i) => {
       if (EXCEL_FORMATS[c.type]) added.getCell(i + 1).numFmt = EXCEL_FORMATS[c.type];
     });
+    if (row.isTotal) added.font = { bold: true };
   });
   sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: columns.length } };
+}
+
+/**
+ * Builds an .xlsx file in the browser and downloads it.
+ * One sheet: { fileName, sheetName, columns, rows }
+ * Several sheets: { fileName, sheets: [{ sheetName, columns, rows }, ...] }
+ * columns: [{ header, key, width, type: 'money' }]. Rows with isTotal: true are shown in bold.
+ * Each header cell is styled on its own so every column title is visible.
+ */
+export const exportToExcel = async ({ fileName, sheets, sheetName, columns, rows }) => {
+  const { default: ExcelJS } = await import('exceljs'); // loaded only when someone exports
+  const workbook = new ExcelJS.Workbook();
+  workbook.created = new Date();
+  const usedNames = new Set();
+  (sheets || [{ sheetName, columns, rows }]).forEach((s) => addSheet(workbook, s, usedNames));
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });

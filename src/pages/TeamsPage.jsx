@@ -46,7 +46,7 @@ export default function TeamsPage() {
   const exportExcel = async () => {
     setExporting(true);
     try {
-      await excelService.teams(teams);
+      await excelService.teams({ search: debounced });
     } catch (err) {
       toast.error(err.message);
     } finally {

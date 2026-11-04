@@ -12,6 +12,7 @@ import UsersPage from './pages/UsersPage';
 import AuctionScreen from './pages/AuctionScreen';
 import NotFoundPage from './pages/NotFoundPage';
 import AuditLogsPage from './pages/AuditLogsPage';
+import ArchivedPlayersPage from './pages/ArchivedPlayersPage';
 import { ROLES } from './utils/constants';
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
           <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
             <Route path="players" element={<PlayersPage />} />
             <Route path="users" element={<UsersPage />} />
+            <Route path="archived-players" element={<ArchivedPlayersPage />} />
             <Route path="audit-logs" element={<AuditLogsPage />} />
           </Route>
         </Route>

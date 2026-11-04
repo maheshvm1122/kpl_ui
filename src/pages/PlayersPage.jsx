@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { CheckCheck, Eye, FileSpreadsheet, Loader2, Pencil } from 'lucide-react';
+import { CheckCheck, Eye, FileSpreadsheet, Loader2, Pencil, Trash2 } from 'lucide-react';
 import PageHeader from '../components/common/PageHeader';
 import Pagination from '../components/common/Pagination';
 import Avatar from '../components/common/Avatar';
@@ -43,6 +43,8 @@ export default function PlayersPage() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [deletePlayer, setDeletePlayer] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -96,6 +98,21 @@ export default function PlayersPage() {
       toast.error(err.message);
     } finally {
       setExporting(false);
+    }
+  };
+
+  /** "Delete" moves the player to Archived Players (they can be restored from there). */
+  const doDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await playerService.archive(deletePlayer._id);
+      toast.success(res.message);
+      setDeletePlayer(null);
+      load();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -226,6 +243,16 @@ export default function PlayersPage() {
                             Mark Paid
                           </button>
                         )}
+                        <button
+                          className="btn-ghost btn-sm text-ball-500"
+                          onClick={() => setDeletePlayer(p)}
+                          disabled={p.soldStatus === 'Sold'}
+                          title={
+                            p.soldStatus === 'Sold' ? 'Sold players cannot be deleted. Undo the sale first' : 'Delete'
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -249,6 +276,24 @@ export default function PlayersPage() {
         onSaved={load}
       />
       {payment.dialog}
+      <ConfirmDialog
+        open={Boolean(deletePlayer)}
+        title="Delete player?"
+        tone="danger"
+        confirmLabel="Delete"
+        loading={deleting}
+        onCancel={() => setDeletePlayer(null)}
+        onConfirm={doDelete}
+        message={
+          deletePlayer && (
+            <>
+              <b>{deletePlayer.slNo}</b> – <b>{deletePlayer.fullName}</b> will be removed from all player lists, counts
+              and the auction.
+              <p className="mt-2 text-slate-500">You can restore the player later from Users → Archived Players.</p>
+            </>
+          )
+        }
+      />
       <ConfirmDialog
         open={bulkOpen}
         title="Mark selected players Paid?"

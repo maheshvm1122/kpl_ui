@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
+  Archive,
   BarChart3,
   Gavel,
   History,
@@ -29,6 +30,7 @@ const NAV = [
   { to: '/app/teams', label: 'Teams', icon: Shield, roles: [ROLES.ADMIN, ROLES.AUCTIONEER] },
   { to: '/app/team-stats', label: 'Team Statistics', icon: BarChart3, roles: [ROLES.ADMIN, ROLES.AUCTIONEER] },
   { to: '/app/users', label: 'Users', icon: UserCog, roles: [ROLES.ADMIN] },
+  { to: '/app/archived-players', label: 'Archived Players', icon: Archive, roles: [ROLES.ADMIN] },
   { to: '/app/audit-logs', label: 'Audit Logs', icon: History, roles: [ROLES.ADMIN] },
 ];
 
@@ -114,7 +116,11 @@ export default function AppLayout() {
       )}
 
       <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
-        <button className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100" onClick={() => setOpen(true)} aria-label="Open menu">
+        <button
+          className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100"
+          onClick={() => setOpen(true)}
+          aria-label="Open menu"
+        >
           <Menu className="h-6 w-6" />
         </button>
         <BrandLogo className="h-8 w-8" />

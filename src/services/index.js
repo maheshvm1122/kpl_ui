@@ -30,6 +30,8 @@ export const playerService = {
   get: (id) => api.get(`/players/${id}`),
   update: (id, values) => api.put(`/players/${id}`, toFormData(values)),
   setPayment: (id, status) => api.patch(`/players/${id}/payment`, { status }),
+  archive: (id) => api.patch(`/players/${id}/archive`),
+  unarchive: (id) => api.patch(`/players/${id}/unarchive`),
   bulkPayment: (ids, status = 'Paid') => api.patch('/players/payment/bulk', { ids, status }),
 };
 
@@ -74,6 +76,58 @@ async function listAllPlayers(params) {
   }
 }
 
+/**
+ * One Excel file for teams: a "Summary" sheet with every team, then one sheet per team
+ * (named after the team) listing its purchased players with a total row.
+ */
+const exportTeamsWorkbook = (teams, fileName) =>
+  exportToExcel({
+    fileName,
+    sheets: [
+      {
+        sheetName: 'Summary',
+        columns: [
+          { header: 'Team Name', key: 'name', width: 26 },
+          { header: 'Owner Name', key: 'ownerName', width: 22 },
+          { header: 'Owner Mobile', key: 'ownerMobile', width: 14 },
+          { header: 'Total Purse (₹)', key: 'totalPurse', width: 16, type: 'money' },
+          { header: 'Spent (₹)', key: 'spentAmount', width: 14, type: 'money' },
+          { header: 'Remaining Purse (₹)', key: 'remainingPurse', width: 18, type: 'money' },
+          { header: 'Players Purchased', key: 'playersCount', width: 16 },
+        ],
+        rows: teams,
+      },
+      ...teams.map((t) => ({
+        sheetName: t.name,
+        columns: [
+          { header: 'Team', key: 'team', width: 26 },
+          { header: 'S.L. No', key: 'slNo', width: 12 },
+          { header: 'Player Name', key: 'fullName', width: 28 },
+          { header: 'Cricket Style', key: 'cricketStyle', width: 16 },
+          { header: 'Sold Amount (₹)', key: 'soldAmount', width: 16, type: 'money' },
+        ],
+        rows: t.players.length
+          ? [
+              ...t.players.map((p) => ({
+                team: t.name,
+                slNo: p.slNo,
+                fullName: p.fullName,
+                cricketStyle: p.cricketStyle,
+                soldAmount: p.soldAmount,
+              })),
+              {
+                team: t.name,
+                fullName: `Total spent (${t.players.length} players)`,
+                soldAmount: t.spentAmount,
+                isTotal: true,
+              },
+              { team: t.name, fullName: 'Remaining purse', soldAmount: t.remainingPurse, isTotal: true },
+            ]
+          : [{ team: t.name, fullName: 'No players purchased yet' }],
+      })),
+    ],
+  });
+
 /** Excel downloads for each table. They use the same API calls as the screens. */
 export const excelService = {
   players: async (params, fileName = 'players') => {
@@ -104,47 +158,13 @@ export const excelService = {
     });
   },
 
-  teams: (teams) =>
-    exportToExcel({
-      fileName: 'teams',
-      sheetName: 'Teams',
-      columns: [
-        { header: 'Team Name', key: 'name', width: 26 },
-        { header: 'Owner Name', key: 'ownerName', width: 22 },
-        { header: 'Owner Mobile', key: 'ownerMobile', width: 14 },
-        { header: 'Total Purse (₹)', key: 'totalPurse', width: 16, type: 'money' },
-        { header: 'Spent (₹)', key: 'spentAmount', width: 14, type: 'money' },
-        { header: 'Remaining Purse (₹)', key: 'remainingPurse', width: 18, type: 'money' },
-        { header: 'Players Purchased', key: 'playersCount', width: 16 },
-      ],
-      rows: teams,
-    }),
+  /** Teams page: same workbook as Team Statistics (Summary + one sheet per team). */
+  teams: async (params) => {
+    const res = await teamService.stats(params);
+    await exportTeamsWorkbook(res.data, 'teams');
+  },
 
-  teamStats: (teams) =>
-    exportToExcel({
-      fileName: 'team-statistics',
-      sheetName: 'Team Statistics',
-      columns: [
-        { header: 'Team', key: 'team', width: 24 },
-        { header: 'S.L. No', key: 'slNo', width: 12 },
-        { header: 'Player Name', key: 'fullName', width: 28 },
-        { header: 'Cricket Style', key: 'cricketStyle', width: 16 },
-        { header: 'Sold Amount (₹)', key: 'soldAmount', width: 16, type: 'money' },
-        { header: 'Team Total Purse (₹)', key: 'totalPurse', width: 18, type: 'money' },
-        { header: 'Team Spent (₹)', key: 'spentAmount', width: 16, type: 'money' },
-        { header: 'Team Remaining (₹)', key: 'remainingPurse', width: 18, type: 'money' },
-      ],
-      // One row per purchased player; teams with no players still get one row.
-      rows: teams.flatMap((t) => {
-        const teamCols = {
-          team: t.name,
-          totalPurse: t.totalPurse,
-          spentAmount: t.spentAmount,
-          remainingPurse: t.remainingPurse,
-        };
-        return t.players.length ? t.players.map((p) => ({ ...teamCols, ...p })) : [teamCols];
-      }),
-    }),
+  teamStats: (teams) => exportTeamsWorkbook(teams, 'team-statistics'),
 
   auditLogs: async (params) => {
     const items = [];
